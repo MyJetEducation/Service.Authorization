@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="6.3.0" />
+    <PackageReference Include="Grpc.Core.Api" Version="2.43.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+    <PackageReference Include="MyJetWallet.Sdk.Grpc" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference PrivateAssets="All" Include="..\Service.Authorization.Domain.Models\Service.Authorization.Domain.Models.csproj" />
+    <ProjectReference PrivateAssets="All" Include="..\Service.Authorization.Domain\Service.Authorization.Domain.csproj" />
+    <ProjectReference PrivateAssets="All" Include="..\Service.Authorization.Grpc\Service.Authorization.Grpc.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>
+      $(TargetsForTfmSpecificBuildOutput);PackReferencedProjectOutputs
+    </TargetsForTfmSpecificBuildOutput>
+    <PackageId>MyJetEducation.Service.Authorization.Client</PackageId>
+    <Authors>MyJetEducation</Authors>
+    <Company>MyJetEducation</Company>
+    <Product>MyJetEducation</Product>
+    <PackageProjectUrl>https://github.com/MyJetEducation/Service.Authorization</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MyJetEducation/Service.Authorization</RepositoryUrl>
+  </PropertyGroup>
+
+  <Target Name="PackReferencedProjectOutputs" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
+    </ItemGroup>
+  </Target>
+
+</Project>
