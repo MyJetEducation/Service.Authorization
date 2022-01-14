@@ -5,11 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Service.Authorization.Domain.Models\Service.Authorization.Domain.Models.csproj" />
+    <ProjectReference Include="..\Service.Authorization.Domain.Models\Service.Authorization.Domain.Models.csproj">
+      <TreatAsUsed>true</TreatAsUsed>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

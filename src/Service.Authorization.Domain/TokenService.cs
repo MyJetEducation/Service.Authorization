@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
@@ -11,6 +12,8 @@ using Service.Authorization.Domain.Models;
 using Service.Core.Grpc.Models;
 using Service.UserInfo.Crud.Grpc;
 using Service.UserInfo.Crud.Grpc.Models;
+using SecurityToken = Microsoft.IdentityModel.Tokens.SecurityToken;
+using SymmetricSecurityKey = Microsoft.IdentityModel.Tokens.SymmetricSecurityKey;
 
 namespace Service.Authorization.Domain
 {
