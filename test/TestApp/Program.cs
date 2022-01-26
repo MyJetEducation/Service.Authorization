@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Threading.Tasks;
 using ProtoBuf.Grpc.Client;
 
 namespace TestApp
 {
 	public class Program
 	{
-		private static async Task Main(string[] args)
+		private static void Main()
 		{
 			GrpcClientFactory.AllowUnencryptedHttp2 = true;
 

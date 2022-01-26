@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
-namespace Service.Authorization.Domain
+namespace Service.Authorization.Client.Services
 {
 	public class UserDataRequestValidator
 	{

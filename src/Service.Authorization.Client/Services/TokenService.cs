@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
@@ -8,14 +7,15 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using Service.Authorization.Domain.Models;
-using Service.Core.Grpc.Models;
+using Service.Authorization.Client.Models;
+using Service.Core.Client.Models;
 using Service.UserInfo.Crud.Grpc;
 using Service.UserInfo.Crud.Grpc.Models;
+using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 using SecurityToken = Microsoft.IdentityModel.Tokens.SecurityToken;
 using SymmetricSecurityKey = Microsoft.IdentityModel.Tokens.SymmetricSecurityKey;
 
-namespace Service.Authorization.Domain
+namespace Service.Authorization.Client.Services
 {
 	public class TokenService : ITokenService
 	{

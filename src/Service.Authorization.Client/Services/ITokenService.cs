@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
+using Service.Authorization.Client.Models;
 
-namespace Service.Authorization.Domain.Models
+namespace Service.Authorization.Client.Services
 {
 	public interface ITokenService
 	{

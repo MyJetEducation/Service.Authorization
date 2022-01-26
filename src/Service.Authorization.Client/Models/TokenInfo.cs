@@ -1,6 +1,6 @@
 ﻿using Service.UserInfo.Crud.Grpc.Models;
 
-namespace Service.Authorization.Domain.Models
+namespace Service.Authorization.Client.Models
 {
 	public class TokenInfo
 	{

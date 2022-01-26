@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Service.Authorization.Client\Service.Authorization.Client.csproj" />
-    <ProjectReference Include="..\..\src\Service.Authorization.Grpc\Service.Authorization.Grpc.csproj" />
   </ItemGroup>
 
 </Project>
