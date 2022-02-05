@@ -11,7 +11,7 @@
     <PackageReference Include="MyJetWallet.Sdk.Grpc" Version="2.0.0" />
     <PackageReference Include="MyJetEducation.Service.UserInfo.Crud.Client" Version="1.0.12" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.15.1" />
-    <PackageReference Include="MyJetEducation.Service.Core.Client" Version="1.0.23" />
+    <PackageReference Include="MyJetEducation.Service.Core.Client" Version="1.0.25" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.15.1" />
   </ItemGroup>
 
