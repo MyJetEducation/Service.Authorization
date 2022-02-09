@@ -9,9 +9,9 @@
     <PackageReference PrivateAssets="All" Include="Grpc.Core.Api" Version="2.43.0" />
     <PackageReference PrivateAssets="All" Include="JetBrains.Annotations" Version="2021.3.0" />
     <PackageReference PrivateAssets="All" Include="MyJetWallet.Sdk.Grpc" Version="2.0.0" />
-    <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.UserInfo.Crud.Client" Version="1.0.12" />
+    <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.UserInfo.Crud.Client" Version="1.0.14" />
     <PackageReference PrivateAssets="All" Include="Microsoft.IdentityModel.Tokens" Version="6.15.1" />
-    <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.Core.Client" Version="1.0.28" />
+    <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.Core.Client" Version="1.0.29" />
     <PackageReference PrivateAssets="All" Include="System.IdentityModel.Tokens.Jwt" Version="6.15.1" />
   </ItemGroup>
 
