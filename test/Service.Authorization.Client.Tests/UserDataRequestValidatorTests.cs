@@ -23,7 +23,7 @@ namespace Service.Authorization.Client.Tests
 		[TestCase("ma.h.saraf.onemore@hostname.com.edu")]
 		[TestCase("ma12@hostname.com")]
 		[TestCase("12@hostname.com")]
-		public void ValidateLoginReturn_true_if_email_is_valid(string mail)
+		public void ValidateLogin_return_true_if_email_is_valid(string mail)
 		{
 			bool isValid = UserDataRequestValidator.ValidateLogin(mail);
 
@@ -57,9 +57,42 @@ namespace Service.Authorization.Client.Tests
 		[TestCase("ma_@jjf")]
 		[TestCase("ma_@jjf.")]
 		[TestCase("ma@jjf.")]
-		public void ValidateLoginReturn_false_if_email_is_not_valid(string mail)
+		public void ValidateLogin_return_false_if_email_is_not_valid(string mail)
 		{
 			bool isValid = UserDataRequestValidator.ValidateLogin(mail);
+
+			Assert.IsFalse(isValid);
+		}
+
+		[TestCase("qwertyu1")]
+		[TestCase("a234567890a234567890a234567890b")]
+		[TestCase("Awertyu1")]
+		[TestCase("1234567a")]
+		[TestCase("1!234567a")]
+		[TestCase("12.34567a")]
+		[TestCase("123~!@#$%^&*-+;`=|\\b")]
+		[TestCase("(){}[]:\",'<>_.?/|4567a")]
+		[TestCase("123-45 67a")]
+		[TestCase("123-4567#a")]
+		[TestCase("123-4567#a.")]
+		[TestCase("!@#q2cd1")]
+		public void ValidatePassword_return_true_if_password_is_valid(string mail)
+		{
+			bool isValid = UserDataRequestValidator.ValidatePassword(mail);
+
+			Assert.IsTrue(isValid);
+		}
+
+		[TestCase(null)]
+		[TestCase("")]
+		[TestCase("qwerty1")]
+		[TestCase("a234567890a234567890a234567890b1")]
+		[TestCase("qwertyui")]
+		[TestCase("12345678")]
+		[TestCase("Юqwertyu1")]
+		public void ValidatePassword_return_false_if_password_is_not_valid(string mail)
+		{
+			bool isValid = UserDataRequestValidator.ValidatePassword(mail);
 
 			Assert.IsFalse(isValid);
 		}
