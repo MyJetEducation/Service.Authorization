@@ -96,5 +96,58 @@ namespace Service.Authorization.Client.Tests
 
 			Assert.IsFalse(isValid);
 		}
+
+		[TestCase("John")]
+		[TestCase("Smith")]
+		[TestCase("D'Largy")]
+		[TestCase("Doe-Smith")]
+		[TestCase("Doe Smith")]
+		[TestCase("Sausage-Hausen")]
+		[TestCase("d'Arras")]
+		[TestCase("SMITH")]
+		[TestCase("STeve")]
+		[TestCase("d'Are")]
+		[TestCase("Wu")]
+		[TestCase("O'Neal")]
+		[TestCase("Johnson-Smith")]
+		[TestCase("O Henry")]
+		[TestCase("McCarty")]
+		[TestCase("B-Ball")]
+		[TestCase("el Jeffe")]
+		[TestCase("Björk")]
+		[TestCase("King, Jr.")]
+		public void ValidateName_return_true_if_name_is_valid(string name)
+		{
+			bool isValid = UserDataRequestValidator.ValidateName(name);
+
+			Assert.IsTrue(isValid);
+		}
+
+		[TestCase("John#")]
+		[TestCase("John!")]
+		[TestCase("John@")]
+		[TestCase("John$")]
+		[TestCase("John%")]
+		[TestCase("John/")]
+		[TestCase("John^")]
+		[TestCase("King&")]
+		[TestCase("King*")]
+		[TestCase("King)")]
+		[TestCase("King[")]
+		[TestCase("King{")]
+		[TestCase("King=")]
+		[TestCase("King|")]
+		[TestCase("King/")]
+		[TestCase("King>")]
+		[TestCase("King?")]
+		[TestCase("King;")]
+		[TestCase("King:")]
+		[TestCase("King:~")]
+		public void ValidateName_return_false_if_name_is_not_valid(string name)
+		{
+			bool isValid = UserDataRequestValidator.ValidateName(name);
+
+			Assert.IsFalse(isValid);
+		}
 	}
 }
