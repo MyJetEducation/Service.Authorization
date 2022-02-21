@@ -123,6 +123,14 @@ namespace Service.Authorization.Client.Tests
 			Assert.IsTrue(isValid);
 		}
 
+		[TestCase(null)]
+		[TestCase("'")]
+		[TestCase("-")]
+		[TestCase(" ")]
+		[TestCase(",")]
+		[TestCase(".")]
+		[TestCase("1")]
+		[TestCase("2")]
 		[TestCase("John#")]
 		[TestCase("John!")]
 		[TestCase("John@")]
@@ -137,6 +145,8 @@ namespace Service.Authorization.Client.Tests
 		[TestCase("King{")]
 		[TestCase("King=")]
 		[TestCase("King|")]
+		[TestCase("King1")]
+		[TestCase("King234")]
 		[TestCase("King/")]
 		[TestCase("King>")]
 		[TestCase("King?")]
