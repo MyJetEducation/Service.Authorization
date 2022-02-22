@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Service.Authorization.Client.Models;
 using Service.Core.Client.Models;
+using Service.Grpc;
 using Service.UserInfo.Crud.Grpc;
 using Service.UserInfo.Crud.Grpc.Models;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
@@ -19,14 +20,14 @@ namespace Service.Authorization.Client.Services
 {
 	public class TokenService : ITokenService
 	{
-		private readonly IUserInfoService _userInfoService;
+		private readonly IGrpcServiceProxy<IUserInfoService> _userInfoService;
 		private readonly string _jwtAudience;
 		private readonly string _jwtSecret;
 		private readonly int _jwtTokenExpireMinutes;
 		private readonly int _refreshTokenExpireMinutes;
 		private readonly ILogger<TokenService> _logger;
 
-		public TokenService(IUserInfoService userInfoService, string jwtAudience, string jwtSecret, int jwtTokenExpireMinutes, int refreshTokenExpireMinutes, ILogger<TokenService> logger)
+		public TokenService(IGrpcServiceProxy<IUserInfoService> userInfoService, string jwtAudience, string jwtSecret, int jwtTokenExpireMinutes, int refreshTokenExpireMinutes, ILogger<TokenService> logger)
 		{
 			_userInfoService = userInfoService;
 			_jwtAudience = jwtAudience;
@@ -38,7 +39,7 @@ namespace Service.Authorization.Client.Services
 
 		public async ValueTask<TokenInfo> GenerateTokensAsync(string userName, string ipAddress, string password = null)
 		{
-			UserInfoResponse userInfo = await _userInfoService.GetUserInfoByLoginAsync(new UserInfoAuthRequest {UserName = userName, Password = password});
+			UserInfoResponse userInfo = await _userInfoService.Service.GetUserInfoByLoginAsync(new UserInfoAuthRequest {UserName = userName, Password = password});
 			UserInfoGrpcModel authInfo = userInfo?.UserInfo;
 
 			_logger.LogDebug("Answer for GetUserInfoByLoginAsync: {answer}", JsonSerializer.Serialize(userInfo));
@@ -50,7 +51,7 @@ namespace Service.Authorization.Client.Services
 
 		public async ValueTask<TokenInfo> RefreshTokensAsync(string currentRefreshToken, string ipAddress)
 		{
-			UserInfoResponse userInfo = await _userInfoService.GetUserInfoByTokenAsync(new UserInfoTokenRequest {RefreshToken = currentRefreshToken});
+			UserInfoResponse userInfo = await _userInfoService.Service.GetUserInfoByTokenAsync(new UserInfoTokenRequest {RefreshToken = currentRefreshToken});
 			UserInfoGrpcModel authInfo = userInfo?.UserInfo;
 
 			_logger.LogDebug("Answer for GetUserInfoByTokenAsync: {answer}", JsonSerializer.Serialize(userInfo));
@@ -73,7 +74,7 @@ namespace Service.Authorization.Client.Services
 
 			_logger.LogDebug("UserNewTokenInfoRequest for UpdateUserTokenInfoAsync: {answer}", JsonSerializer.Serialize(newTokenInfoRequest));
 
-			CommonGrpcResponse response = await _userInfoService.UpdateUserTokenInfoAsync(newTokenInfoRequest);
+			CommonGrpcResponse response = await _userInfoService.TryCall(service => service.UpdateUserTokenInfoAsync(newTokenInfoRequest));
 
 			_logger.LogDebug("Answer for UpdateUserTokenInfoAsync: {answer}", JsonSerializer.Serialize(response));
 
