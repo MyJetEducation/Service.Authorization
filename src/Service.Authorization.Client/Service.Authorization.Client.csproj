@@ -13,7 +13,7 @@
     <PackageReference PrivateAssets="All" Include="Microsoft.IdentityModel.Tokens" Version="6.16.0" />
     <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.Core.Client" Version="1.0.29" />
     <PackageReference PrivateAssets="All" Include="System.IdentityModel.Tokens.Jwt" Version="6.16.0" />
-    <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.Grpc" Version="1.0.3" />
+    <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.Grpc" Version="1.0.4" />
   </ItemGroup>
 
   <PropertyGroup>
