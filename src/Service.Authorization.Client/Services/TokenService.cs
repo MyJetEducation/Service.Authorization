@@ -3,12 +3,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Service.Authorization.Client.Models;
-using Service.Core.Client.Models;
+using Service.Core.Client.Services;
 using Service.Grpc;
 using Service.UserInfo.Crud.Grpc;
 using Service.UserInfo.Crud.Grpc.Models;
@@ -21,73 +20,79 @@ namespace Service.Authorization.Client.Services
 	public class TokenService : ITokenService
 	{
 		private readonly IGrpcServiceProxy<IUserInfoService> _userInfoService;
+		private readonly IEncoderDecoder _encoderDecoder;
+		private readonly ILogger<TokenService> _logger;
+		private readonly ISystemClock _systemClock;
+
 		private readonly string _jwtAudience;
 		private readonly string _jwtSecret;
 		private readonly int _jwtTokenExpireMinutes;
 		private readonly int _refreshTokenExpireMinutes;
-		private readonly ILogger<TokenService> _logger;
 
-		public TokenService(IGrpcServiceProxy<IUserInfoService> userInfoService, string jwtAudience, string jwtSecret, int jwtTokenExpireMinutes, int refreshTokenExpireMinutes, ILogger<TokenService> logger)
+		public TokenService(IGrpcServiceProxy<IUserInfoService> userInfoService, 
+			IEncoderDecoder encoderDecoder,
+			ILogger<TokenService> logger,
+			ISystemClock systemClock,
+			string jwtAudience, string jwtSecret, int jwtTokenExpireMinutes, int refreshTokenExpireMinutes)
 		{
 			_userInfoService = userInfoService;
+			_encoderDecoder = encoderDecoder;
 			_jwtAudience = jwtAudience;
 			_jwtSecret = jwtSecret;
 			_jwtTokenExpireMinutes = jwtTokenExpireMinutes;
 			_refreshTokenExpireMinutes = refreshTokenExpireMinutes;
 			_logger = logger;
+			_systemClock = systemClock;
 		}
 
 		public async ValueTask<TokenInfo> GenerateTokensAsync(string userName, string ipAddress, string password = null)
 		{
 			UserInfoResponse userInfo = await _userInfoService.Service.GetUserInfoByLoginAsync(new UserInfoAuthRequest {UserName = userName, Password = password});
-			UserInfoGrpcModel authInfo = userInfo?.UserInfo;
 
-			_logger.LogDebug("Answer for GetUserInfoByLoginAsync: {answer}", JsonSerializer.Serialize(userInfo));
-
-			return authInfo != null
-				? await GetNewTokenInfo(authInfo, ipAddress)
-				: await ValueTask.FromResult<TokenInfo>(null);
+			return await GetNewTokenInfo(userInfo, ipAddress);
 		}
 
 		public async ValueTask<TokenInfo> RefreshTokensAsync(string currentRefreshToken, string ipAddress)
 		{
-			UserInfoResponse userInfo = await _userInfoService.Service.GetUserInfoByTokenAsync(new UserInfoTokenRequest {RefreshToken = currentRefreshToken});
-			UserInfoGrpcModel authInfo = userInfo?.UserInfo;
+			RefreshTokenInfo tokenInfo = DecodeReshreshToken(currentRefreshToken);
 
-			_logger.LogDebug("Answer for GetUserInfoByTokenAsync: {answer}", JsonSerializer.Serialize(userInfo));
+			if (tokenInfo == null)
+				return await ValueTask.FromResult<TokenInfo>(null);
+			if (tokenInfo.RefreshTokenExpires < _systemClock.Now)
+			{
+				_logger.LogWarning("Token {currentRefreshToken} for user: {userId} has expired ({date})", currentRefreshToken, tokenInfo.RefreshTokenUserId, tokenInfo.RefreshTokenExpires);
+				return await ValueTask.FromResult<TokenInfo>(null);
+			}
+			if (tokenInfo.RefreshTokenIpAddress != ipAddress)
+			{
+				_logger.LogWarning("Token {currentRefreshToken} for user: {userId} has changed ip (was: {ip1}, now: {ip2})", currentRefreshToken, tokenInfo.RefreshTokenUserId, tokenInfo.RefreshTokenIpAddress, ipAddress);
+				return await ValueTask.FromResult<TokenInfo>(null);
+			}
 
-			return authInfo != null && authInfo.IpAddress == ipAddress && DateTime.UtcNow < authInfo.RefreshTokenExpires
-				? await GetNewTokenInfo(authInfo, ipAddress)
-				: await ValueTask.FromResult<TokenInfo>(null);
+			UserInfoResponse userInfo = await _userInfoService.Service.GetUserInfoByIdAsync(new UserInfoRequest { UserId = tokenInfo.RefreshTokenUserId});
+
+			return await GetNewTokenInfo(userInfo, ipAddress);
 		}
 
-		private async ValueTask<TokenInfo> GetNewTokenInfo(UserInfoGrpcModel userInfo, string ipAddress)
+		private async ValueTask<TokenInfo> GetNewTokenInfo(UserInfoResponse userInfoResponse, string ipAddress)
 		{
-			var newTokenInfoRequest = new UserNewTokenInfoRequest
-			{
-				IpAddress = ipAddress,
-				UserId = userInfo.UserId
-			};
-
-			SetJwtToken(newTokenInfoRequest, userInfo);
-			SetRefreshToken(newTokenInfoRequest);
-
-			_logger.LogDebug("UserNewTokenInfoRequest for UpdateUserTokenInfoAsync: {answer}", JsonSerializer.Serialize(newTokenInfoRequest));
-
-			CommonGrpcResponse response = await _userInfoService.TryCall(service => service.UpdateUserTokenInfoAsync(newTokenInfoRequest));
-
-			_logger.LogDebug("Answer for UpdateUserTokenInfoAsync: {answer}", JsonSerializer.Serialize(response));
-
-			if (!response.IsSuccess)
+			UserInfoGrpcModel userInfo = userInfoResponse?.UserInfo;
+			if (userInfo == null)
 				return await ValueTask.FromResult<TokenInfo>(null);
 
-			return new TokenInfo(newTokenInfoRequest);
+			_logger.LogDebug("Generate new token info for user: {user}, ip: {ip}", userInfo.UserId, ipAddress);
+
+			return new TokenInfo
+			{
+				Token = GenerateJwtToken(userInfo),
+				RefreshToken = GenerateRefreshToken(userInfo, ipAddress)
+			};
 		}
 
-		private void SetJwtToken(UserNewTokenInfoRequest tokenInfoRequest, UserInfoGrpcModel userInfo)
+		private string GenerateJwtToken(UserInfoGrpcModel userInfo)
 		{
 			byte[] key = Encoding.ASCII.GetBytes(_jwtSecret);
-			string clientId = userInfo.UserName;
+			var clientId = userInfo.UserId.ToString();
 
 			var claims = new[]
 			{
@@ -96,29 +101,44 @@ namespace Service.Authorization.Client.Services
 				new Claim(ClaimsIdentity.DefaultRoleClaimType, userInfo.Role)
 			};
 
+			var tokenHandler = new JwtSecurityTokenHandler();
+			
 			var identity = new GenericIdentity(clientId);
 
-			var tokenDescriptor = new SecurityTokenDescriptor
+			SecurityToken token = tokenHandler.CreateToken(new SecurityTokenDescriptor
 			{
 				Subject = new ClaimsIdentity(identity, claims),
 				Expires = DateTime.UtcNow.AddMinutes(_jwtTokenExpireMinutes),
 				SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-			};
+			});
 
-			var tokenHandler = new JwtSecurityTokenHandler();
-
-			SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
-
-			tokenInfoRequest.JwtToken = tokenHandler.WriteToken(token);
+			return tokenHandler.WriteToken(token);
 		}
 
-		private void SetRefreshToken(UserNewTokenInfoRequest tokenInfoRequest)
+		private string GenerateRefreshToken(UserInfoGrpcModel userInfo, string ipAddress)
 		{
-			byte[] key = Encoding.ASCII.GetBytes(Guid.NewGuid().ToString());
+			return _encoderDecoder.EncodeProto(new RefreshTokenInfo
+			{
+				RefreshTokenUserId = userInfo.UserId,
+				RefreshTokenIpAddress = ipAddress,
+				RefreshTokenExpires = _systemClock.Now.AddMinutes(_refreshTokenExpireMinutes)
+			});
+		}
 
-			tokenInfoRequest.RefreshToken = Convert.ToBase64String(key);
+		private RefreshTokenInfo DecodeReshreshToken(string token)
+		{
+			RefreshTokenInfo tokenInfo = null;
 
-			tokenInfoRequest.RefreshTokenExpires = DateTime.UtcNow.AddMinutes(_refreshTokenExpireMinutes);
+			try
+			{
+				tokenInfo = _encoderDecoder.DecodeProto<RefreshTokenInfo>(token);
+			}
+			catch (Exception exception)
+			{
+				_logger.LogError("Can't decode refresh token info ({token}), with message {message}", token, exception.Message);
+			}
+
+			return tokenInfo;
 		}
 	}
 }
