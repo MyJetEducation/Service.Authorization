@@ -58,11 +58,13 @@ namespace Service.Authorization.Client.Services
 
 			if (tokenInfo == null)
 				return await ValueTask.FromResult<TokenInfo>(null);
+
 			if (tokenInfo.RefreshTokenExpires < _systemClock.Now)
 			{
 				_logger.LogWarning("Token {currentRefreshToken} for user: {userId} has expired ({date})", currentRefreshToken, tokenInfo.RefreshTokenUserId, tokenInfo.RefreshTokenExpires);
 				return await ValueTask.FromResult<TokenInfo>(null);
 			}
+
 			if (tokenInfo.RefreshTokenIpAddress != ipAddress)
 			{
 				_logger.LogWarning("Token {currentRefreshToken} for user: {userId} has changed ip (was: {ip1}, now: {ip2})", currentRefreshToken, tokenInfo.RefreshTokenUserId, tokenInfo.RefreshTokenIpAddress, ipAddress);
@@ -108,22 +110,19 @@ namespace Service.Authorization.Client.Services
 			SecurityToken token = tokenHandler.CreateToken(new SecurityTokenDescriptor
 			{
 				Subject = new ClaimsIdentity(identity, claims),
-				Expires = DateTime.UtcNow.AddMinutes(_jwtTokenExpireMinutes),
+				Expires = _systemClock.Now.AddMinutes(_jwtTokenExpireMinutes),
 				SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
 			});
 
 			return tokenHandler.WriteToken(token);
 		}
 
-		private string GenerateRefreshToken(UserInfoGrpcModel userInfo, string ipAddress)
+		private string GenerateRefreshToken(UserInfoGrpcModel userInfo, string ipAddress) => _encoderDecoder.EncodeProto(new RefreshTokenInfo
 		{
-			return _encoderDecoder.EncodeProto(new RefreshTokenInfo
-			{
-				RefreshTokenUserId = userInfo.UserId,
-				RefreshTokenIpAddress = ipAddress,
-				RefreshTokenExpires = _systemClock.Now.AddMinutes(_refreshTokenExpireMinutes)
-			});
-		}
+			RefreshTokenUserId = userInfo.UserId,
+			RefreshTokenIpAddress = ipAddress,
+			RefreshTokenExpires = _systemClock.Now.AddMinutes(_refreshTokenExpireMinutes)
+		});
 
 		private RefreshTokenInfo DecodeReshreshToken(string token)
 		{
