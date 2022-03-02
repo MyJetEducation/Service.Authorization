@@ -11,7 +11,7 @@
     <PackageReference PrivateAssets="All" Include="MyJetWallet.Sdk.Grpc" Version="2.0.0" />
     <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.UserInfo.Crud.Client" Version="1.0.17" />
     <PackageReference PrivateAssets="All" Include="Microsoft.IdentityModel.Tokens" Version="6.16.0" />
-    <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.Core.Client" Version="1.0.29" />
+    <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.Core.Client" Version="1.0.31" />
     <PackageReference PrivateAssets="All" Include="System.IdentityModel.Tokens.Jwt" Version="6.16.0" />
     <PackageReference PrivateAssets="All" Include="MyJetEducation.Service.Grpc" Version="1.0.7" />
     <PackageReference PrivateAssets="All" Include="SimpleTrading.Common" Version="1.0.32" />
