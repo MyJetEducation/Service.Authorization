@@ -5,7 +5,7 @@ namespace Service.Authorization.Client.Services
 {
 	public static class UserDataRequestValidator
 	{
-		private static readonly Regex PasswordRegex = new(@"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d\W_]{8,31}$",
+		private static readonly Regex PasswordRegex = new(@"^(?![\s])(?=.+[A-Za-z])(?=.+[\d])[A-Za-z\d\W_][^\s]{7,30}$",
 			RegexOptions.Compiled);
 
 		private static readonly Regex NameRegex = new(@"^[\w\s',.\-].[^+#!@$%\/^&*()[\]{}=|\<>?;:\d]*$",

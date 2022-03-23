@@ -57,6 +57,8 @@ namespace Service.Authorization.Client.Tests
 		[TestCase("ma_@jjf")]
 		[TestCase("ma_@jjf.")]
 		[TestCase("ma@jjf.")]
+		[TestCase(" abc@mail.com")]
+		[TestCase("abc@mail.com ")]
 		public void ValidateLogin_return_false_if_email_is_not_valid(string mail)
 		{
 			bool isValid = UserDataRequestValidator.ValidateLogin(mail);
@@ -72,7 +74,7 @@ namespace Service.Authorization.Client.Tests
 		[TestCase("12.34567a")]
 		[TestCase("123~!@#$%^&*-+;`=|\\b")]
 		[TestCase("(){}[]:\",'<>_.?/|4567a")]
-		[TestCase("123-45 67a")]
+		[TestCase("123-4567a")]
 		[TestCase("123-4567#a")]
 		[TestCase("123-4567#a.")]
 		[TestCase("!@#q2cd1")]
@@ -87,9 +89,12 @@ namespace Service.Authorization.Client.Tests
 		[TestCase("")]
 		[TestCase("qwerty1")]
 		[TestCase("a234567890a234567890a234567890b1")]
-		[TestCase("qwertyui")]
+		[TestCase("qwe rtyui")]
 		[TestCase("12345678")]
 		[TestCase("Юqwertyu1")]
+		[TestCase(" Awertyu1")]
+		[TestCase("Awertyu1 ")]
+		[TestCase("Awer tyu1")]
 		public void ValidatePassword_return_false_if_password_is_not_valid(string mail)
 		{
 			bool isValid = UserDataRequestValidator.ValidatePassword(mail);
