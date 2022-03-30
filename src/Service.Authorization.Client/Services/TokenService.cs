@@ -54,7 +54,8 @@ namespace Service.Authorization.Client.Services
 
 			var tokenInfo = new AuthTokenInfo
 			{
-				UserNotFound = userInfoResponse?.UserNotFound == true || userInfo == null,
+				Error = userInfoResponse == null || userInfoResponse.IsValid() && userInfo == null,
+				UserNotFound = userInfoResponse?.UserNotFound == true,
 				InvalidPassword = userInfoResponse?.InvalidPassword == true
 			};
 

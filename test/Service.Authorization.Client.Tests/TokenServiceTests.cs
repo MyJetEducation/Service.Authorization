@@ -83,7 +83,7 @@ namespace Service.Authorization.Client.Tests
 			AuthTokenInfo tokenInfo = await _sut.GenerateTokensAsync(UserName, IpAddress, PassWord);
 
 			Assert.IsNotNull(tokenInfo);
-			Assert.IsTrue(tokenInfo.UserNotFound);
+			Assert.IsTrue(tokenInfo.Error);
 		}
 
 		[Test]

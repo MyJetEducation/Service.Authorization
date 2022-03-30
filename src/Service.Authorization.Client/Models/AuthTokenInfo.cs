@@ -6,6 +6,8 @@
 
 		public bool InvalidPassword { get; set; }
 
-		public bool IsValid() => !UserNotFound && !InvalidPassword;
+		public bool Error { get; set; }
+
+		public bool IsValid() => !UserNotFound && !InvalidPassword && !Error;
 	}
 }
