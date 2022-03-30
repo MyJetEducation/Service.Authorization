@@ -56,9 +56,9 @@ namespace Service.Authorization.Client.Tests
 		public async Task GenerateTokensAsync_return_token_info()
 		{
 			_userInfoService
-				.Setup(proxy => proxy.Service.GetUserInfoByLoginAsync(It.Is<UserInfoAuthRequest>(request =>
+				.Setup(proxy => proxy.Service.GetUserInfoForAuth(It.Is<UserInfoAuthRequest>(request =>
 					request.UserName == UserName && request.Password == PassWord)))
-				.Returns(ValueTask.FromResult(new UserInfoResponse
+				.Returns(ValueTask.FromResult(new UserInfoForAuthRespose
 				{
 					UserInfo = new UserInfoGrpcModel
 					{
@@ -67,22 +67,57 @@ namespace Service.Authorization.Client.Tests
 					}
 				}));
 
-			TokenInfo tokenInfo = await _sut.GenerateTokensAsync(UserName, IpAddress, PassWord);
+			AuthTokenInfo tokenInfo = await _sut.GenerateTokensAsync(UserName, IpAddress, PassWord);
 
-			AssertTokenInfo(tokenInfo);
+			AssertTokenInfo(tokenInfo.Token, tokenInfo.RefreshToken);
 		}
 
 		[Test]
-		public async Task GenerateTokensAsync_return_null_if_user_info_not_found()
+		public async Task GenerateTokensAsync_return_flag_if_user_info_not_found()
 		{
 			_userInfoService
-				.Setup(proxy => proxy.Service.GetUserInfoByLoginAsync(It.Is<UserInfoAuthRequest>(request =>
+				.Setup(proxy => proxy.Service.GetUserInfoForAuth(It.Is<UserInfoAuthRequest>(request =>
 					request.UserName == UserName && request.Password == PassWord)))
-				.Returns(ValueTask.FromResult<UserInfoResponse>(null));
+				.Returns(ValueTask.FromResult<UserInfoForAuthRespose>(null));
 
-			TokenInfo tokenInfo = await _sut.GenerateTokensAsync(UserName, IpAddress, PassWord);
+			AuthTokenInfo tokenInfo = await _sut.GenerateTokensAsync(UserName, IpAddress, PassWord);
 
-			Assert.IsNull(tokenInfo);
+			Assert.IsNotNull(tokenInfo);
+			Assert.IsTrue(tokenInfo.UserNotFound);
+		}
+
+		[Test]
+		public async Task GenerateTokensAsync_return_flag_if_user_not_found()
+		{
+			_userInfoService
+				.Setup(proxy => proxy.Service.GetUserInfoForAuth(It.Is<UserInfoAuthRequest>(request =>
+					request.UserName == UserName && request.Password == PassWord)))
+				.Returns(ValueTask.FromResult(new UserInfoForAuthRespose
+				{
+					UserNotFound = true
+				}));
+
+			AuthTokenInfo tokenInfo = await _sut.GenerateTokensAsync(UserName, IpAddress, PassWord);
+
+			Assert.IsNotNull(tokenInfo);
+			Assert.IsTrue(tokenInfo.UserNotFound);
+		}
+
+		[Test]
+		public async Task GenerateTokensAsync_return_flag_if_user_passsword_not_valid()
+		{
+			_userInfoService
+				.Setup(proxy => proxy.Service.GetUserInfoForAuth(It.Is<UserInfoAuthRequest>(request =>
+					request.UserName == UserName && request.Password == PassWord)))
+				.Returns(ValueTask.FromResult(new UserInfoForAuthRespose
+				{
+					InvalidPassword = true
+				}));
+
+			AuthTokenInfo tokenInfo = await _sut.GenerateTokensAsync(UserName, IpAddress, PassWord);
+
+			Assert.IsNotNull(tokenInfo);
+			Assert.IsTrue(tokenInfo.InvalidPassword);
 		}
 
 		[Test]
@@ -103,7 +138,7 @@ namespace Service.Authorization.Client.Tests
 
 			TokenInfo tokenInfo = await _sut.RefreshTokensAsync(currentRefreshToken, IpAddress);
 
-			AssertTokenInfo(tokenInfo);
+			AssertTokenInfo(tokenInfo.Token, tokenInfo.RefreshToken);
 		}
 
 		[Test]
@@ -134,11 +169,8 @@ namespace Service.Authorization.Client.Tests
 			Assert.IsNull(tokenInfo);
 		}
 
-		private void AssertTokenInfo(TokenInfo tokenInfo)
+		private void AssertTokenInfo(string jwtToken, string refreshToken)
 		{
-			Assert.IsNotNull(tokenInfo);
-
-			string refreshToken = tokenInfo.RefreshToken;
 			Assert.IsNotNull(refreshToken);
 
 			var refreshTokenInfo = _encoderDecoder.DecodeProto<RefreshTokenInfo>(refreshToken);
@@ -147,7 +179,6 @@ namespace Service.Authorization.Client.Tests
 			Assert.AreEqual(IpAddress, refreshTokenInfo.RefreshTokenIpAddress);
 			Assert.AreEqual(_userId, refreshTokenInfo.RefreshTokenUserId);
 
-			string jwtToken = tokenInfo.Token;
 			Assert.IsNotNull(jwtToken);
 
 			JwtSecurityToken token = new JwtSecurityTokenHandler().ReadJwtToken(jwtToken);

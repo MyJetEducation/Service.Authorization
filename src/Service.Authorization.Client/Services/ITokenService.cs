@@ -5,7 +5,7 @@ namespace Service.Authorization.Client.Services
 {
 	public interface ITokenService
 	{
-		ValueTask<TokenInfo> GenerateTokensAsync(string userName, string ipAddress, string password = null);
+		ValueTask<AuthTokenInfo> GenerateTokensAsync(string userName, string ipAddress, string password = null);
 
 		ValueTask<TokenInfo> RefreshTokensAsync(string currentRefreshToken, string ipAddress);
 	}

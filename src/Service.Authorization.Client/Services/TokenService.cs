@@ -45,11 +45,26 @@ namespace Service.Authorization.Client.Services
 			_systemClock = systemClock;
 		}
 
-		public async ValueTask<TokenInfo> GenerateTokensAsync(string userName, string ipAddress, string password = null)
+		public async ValueTask<AuthTokenInfo> GenerateTokensAsync(string userName, string ipAddress, string password = null)
 		{
-			UserInfoResponse userInfo = await _userInfoService.Service.GetUserInfoByLoginAsync(new UserInfoAuthRequest {UserName = userName, Password = password});
+			UserInfoForAuthRespose userInfoResponse = await _userInfoService.Service.GetUserInfoForAuth(new UserInfoAuthRequest {UserName = userName, Password = password});
+			UserInfoGrpcModel userInfo = userInfoResponse?.UserInfo;
 
-			return await GetNewTokenInfo(userInfo, ipAddress);
+			_logger.LogDebug("Generate new token info for user: {user}, ip: {ip}", userInfo?.UserId, ipAddress);
+
+			var tokenInfo = new AuthTokenInfo
+			{
+				UserNotFound = userInfoResponse?.UserNotFound == true || userInfo == null,
+				InvalidPassword = userInfoResponse?.InvalidPassword == true
+			};
+
+			if (tokenInfo.IsValid())
+			{
+				tokenInfo.Token = GenerateJwtToken(userInfo);
+				tokenInfo.RefreshToken = GenerateRefreshToken(userInfo, ipAddress);
+			}
+
+			return tokenInfo;
 		}
 
 		public async ValueTask<TokenInfo> RefreshTokensAsync(string currentRefreshToken, string ipAddress)
@@ -71,13 +86,7 @@ namespace Service.Authorization.Client.Services
 				return await ValueTask.FromResult<TokenInfo>(null);
 			}
 
-			UserInfoResponse userInfo = await _userInfoService.Service.GetUserInfoByIdAsync(new UserInfoRequest { UserId = tokenInfo.RefreshTokenUserId});
-
-			return await GetNewTokenInfo(userInfo, ipAddress);
-		}
-
-		private async ValueTask<TokenInfo> GetNewTokenInfo(UserInfoResponse userInfoResponse, string ipAddress)
-		{
+			UserInfoResponse userInfoResponse = await _userInfoService.Service.GetUserInfoByIdAsync(new UserInfoRequest { UserId = tokenInfo.RefreshTokenUserId});
 			UserInfoGrpcModel userInfo = userInfoResponse?.UserInfo;
 			if (userInfo == null)
 				return await ValueTask.FromResult<TokenInfo>(null);
