@@ -1,11 +1,7 @@
 ﻿namespace Service.Authorization.Client.Models
 {
-	public class AuthTokenInfo
+	public class AuthTokenInfo: TokenInfo
 	{
-		public string Token { get; set; }
-
-		public string RefreshToken { get; set; }
-
 		public bool UserNotFound { get; set; }
 
 		public bool InvalidPassword { get; set; }
