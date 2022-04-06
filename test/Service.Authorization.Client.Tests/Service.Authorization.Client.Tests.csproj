@@ -16,7 +16,7 @@
     <PackageReference Include="MyJetEducation.Service.Core.Client" Version="1.0.33" />
     <PackageReference Include="Moq.AutoMock" Version="3.3.0" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.9.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.16.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.17.0" />
     <PackageReference Include="protobuf-net.Grpc" Version="1.0.152" />
     <PackageReference Include="SimpleTrading.Common" Version="1.0.32" />
   </ItemGroup>
